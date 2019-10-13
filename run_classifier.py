@@ -1,3 +1,6 @@
+# coding=utf-8
+# This file is based on https://github.com/gochipon/xlnet/blob/master/run_classifier.py
+# It is changed to use https://www.rondhuit.com/download/ldcc-20140209.tar.gz.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -220,7 +223,7 @@ class GLUEProcessor(DataProcessor):
     if self.test_text_a_column is None:
       self.test_text_a_column = self.text_a_column
     if self.test_text_b_column is None:
-      self.test_text_b_column = self.text_b_column
+      self.test_text_b_column = oself.text_b_column
 
     return self._create_examples(
         self._read_tsv(os.path.join(data_dir, self.test_file)), "test")
@@ -391,7 +394,44 @@ class StsbProcessor(GLUEProcessor):
 
     return examples
 
+# livedoor news
+class LivedoorProcessor():
+  """Processor for the livedoor data set (see https://www.rondhuit.com/download.html)."""
+  def get_train_examples(self, data_dir):
+    return self._create_examples(
+      self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
 
+  def get_dev_examples(self, data_dir):
+      """See base class."""
+      return self._create_examples(
+        self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+  def get_test_examples(self, data_dir):
+    """See base class."""
+    return self._create_examples(
+      self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+  
+  def get_labels(self):
+    """See base class."""
+    return ['dokujo-tsushin', 'it-life-hack', 'kaden-channel', 'livedoor-homme', 'movie-enter', 'peachy', 'smax', 'sports-watch', 'topic-news']
+
+  def _create_examples(self, lines, set_type):
+    """Creates examples for the training and dev sets."""
+    examples = []
+    for (i, line) in enumerate(lines):
+      if i == 0:
+        idx_text = line.index('text')
+        idx_label = line.index('label')
+      else:
+        guid = "%s-%s" % (set_type, i)
+        # tokenize は`convert_single_example` 内でsentencepiceで分かち書きされるのでここでは実施しなくてよい
+        text_a = line[idx_text]
+        label = line[idx_label]
+        examples.append(
+          InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
+    return examples
+  
+      
 def file_based_convert_examples_to_features(
     examples, label_list, max_seq_length, tokenize_fn, output_file,
     num_passes=1):
@@ -646,11 +686,12 @@ def main(_):
       tf.gfile.MakeDirs(predict_dir)
 
   processors = {
-      "mnli_matched": MnliMatchedProcessor,
-      "mnli_mismatched": MnliMismatchedProcessor,
-      'sts-b': StsbProcessor,
-      'imdb': ImdbProcessor,
-      "yelp5": Yelp5Processor
+    "mnli_matched": MnliMatchedProcessor,
+    "mnli_mismatched": MnliMismatchedProcessor,
+    'sts-b': StsbProcessor,
+    'imdb': ImdbProcessor,
+    "yelp5": Yelp5Processor,
+    "livedoor": LivedoorProcessor,
   }
 
   if not FLAGS.do_train and not FLAGS.do_eval and not FLAGS.do_predict:
