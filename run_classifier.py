@@ -413,9 +413,11 @@ class LivedoorProcessor(DataProcessor):
   
   def get_labels(self):
     """See base class."""
-    return ['dokujo-tsushin', 'it-life-hack', 'kaden-channel', 'livedoor-homme', 'movie-enter', 'peachy', 'smax', 'sports-watch', 'topic-news']
-
+    return ["0", "1", "3", "4", "5", "6", "7", "8", "9"]
+    #return ['dokujo-tsushin', 'it-life-hack', 'kaden-channel', 'livedoor-homme', 'movie-enter', 'peachy', 'smax', 'sports-watch', 'topic-news']
+  
   def _create_examples(self, lines, set_type):
+    clses = ['dokujo-tsushin', 'it-life-hack', 'kaden-channel', 'livedoor-homme', 'movie-enter', 'peachy', 'smax', 'sports-watch', 'topic-news']
     """Creates examples for the training and dev sets."""
     examples = []
     for (i, line) in enumerate(lines):
@@ -426,7 +428,8 @@ class LivedoorProcessor(DataProcessor):
         guid = "%s-%s" % (set_type, i)
         # tokenize は`convert_single_example` 内でsentencepiceで分かち書きされるのでここでは実施しなくてよい
         text_a = line[idx_text]
-        label = line[idx_label]
+        # id に変換しておく
+        label = clses.index(line[idx_label])
         examples.append(
           InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
     return examples
