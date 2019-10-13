@@ -395,7 +395,7 @@ class StsbProcessor(GLUEProcessor):
     return examples
 
 # livedoor news
-class LivedoorProcessor():
+class LivedoorProcessor(DataProcessor):
   """Processor for the livedoor data set (see https://www.rondhuit.com/download.html)."""
   def get_train_examples(self, data_dir):
     return self._create_examples(
@@ -633,12 +633,13 @@ def get_model_fn(n_class):
             mode=mode, predictions=predictions, scaffold_fn=scaffold_fn)
       else:
         output_spec = tf.estimator.EstimatorSpec(
-            mode=mode, predictions=predictions)
+            mode=mode, predictions=predictions, training_hooks=[logging_hook])
       return output_spec
 
     #### Configuring the optimizer
     train_op, learning_rate, _ = model_utils.get_train_op(FLAGS, total_loss)
-
+    # 2019.10.13 ログ出す
+    logging_hook = tf.train.LoggingTensorHook({"loss": total_loss}, every_n_iter=10)
     monitor_dict = {}
     monitor_dict["lr"] = learning_rate
 
